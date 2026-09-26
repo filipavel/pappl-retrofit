@@ -23,6 +23,8 @@
 #include <pappl-retrofit/pappl-retrofit-private.h>
 #include <pappl-retrofit/pappl1-private.h>
 #include <pappl-retrofit/libcups2-private.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 
 //
@@ -895,6 +897,36 @@ _prCreateJobData(pappl_job_t *job,
   filter_data->printer = strdup(papplPrinterGetName(printer));
   filter_data->job_id = papplJobGetID(job);
   filter_data->job_user = strdup(papplJobGetUsername(job));
+
+  // Map username to UID for Kerberos authentication (SMB backend support)
+  // This allows smbspool_krb5_wrapper to access the user's credential cache
+  {
+    const char *username = papplJobGetUsername(job);
+    struct passwd *pwd = NULL;
+
+    if (username && username[0])
+    {
+      pwd = getpwnam(username);
+      if (pwd)
+      {
+        char auth_uid_buf[64];
+        snprintf(auth_uid_buf, sizeof(auth_uid_buf), "%d", (int)pwd->pw_uid);
+        setenv("AUTH_UID", auth_uid_buf, 1);
+        setenv("AUTH_INFO_REQUIRED", "negotiate", 1);
+
+        papplLogJob(job, PAPPL_LOGLEVEL_DEBUG,
+                    "Set AUTH_UID=%d for user '%s' (Kerberos support)",
+                    (int)pwd->pw_uid, username);
+      }
+      else
+      {
+        papplLogJob(job, PAPPL_LOGLEVEL_WARN,
+                    "Failed to map username '%s' to UID - Kerberos auth may fail",
+                    username);
+      }
+    }
+  }
+
   filter_data->job_title = strdup(papplJobGetName(job));
   filter_data->copies = job_options->copies;
   filter_data->job_attrs = NULL;     // We use PPD/filter options
