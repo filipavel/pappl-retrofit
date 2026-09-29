@@ -910,13 +910,19 @@ _prCreateJobData(pappl_job_t *job,
       if (pwd)
       {
         char auth_uid_buf[64];
+        char krb5_ccname_buf[128];
+
         snprintf(auth_uid_buf, sizeof(auth_uid_buf), "%d", (int)pwd->pw_uid);
         setenv("AUTH_UID", auth_uid_buf, 1);
         setenv("AUTH_INFO_REQUIRED", "negotiate", 1);
 
+        // Set KRB5CCNAME to point to user's credential cache (KCM format)
+        snprintf(krb5_ccname_buf, sizeof(krb5_ccname_buf), "KCM:%d", (int)pwd->pw_uid);
+        setenv("KRB5CCNAME", krb5_ccname_buf, 1);
+
         papplLogJob(job, PAPPL_LOGLEVEL_DEBUG,
-                    "Set AUTH_UID=%d for user '%s' (Kerberos support)",
-                    (int)pwd->pw_uid, username);
+                    "Set AUTH_UID=%d KRB5CCNAME=%s for user '%s' (Kerberos support)",
+                    (int)pwd->pw_uid, krb5_ccname_buf, username);
       }
       else
       {
