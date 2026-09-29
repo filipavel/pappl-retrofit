@@ -916,8 +916,9 @@ _prCreateJobData(pappl_job_t *job,
         setenv("AUTH_UID", auth_uid_buf, 1);
         setenv("AUTH_INFO_REQUIRED", "negotiate", 1);
 
-        // Set KRB5CCNAME to point to user's credential cache (KCM format)
-        snprintf(krb5_ccname_buf, sizeof(krb5_ccname_buf), "KCM:%d", (int)pwd->pw_uid);
+        // Set KRB5CCNAME to point to user's credential cache
+        // Prefer FILE cache over KCM as KCM has issues with setuid processes
+        snprintf(krb5_ccname_buf, sizeof(krb5_ccname_buf), "FILE:/tmp/krb5cc_%d", (int)pwd->pw_uid);
         setenv("KRB5CCNAME", krb5_ccname_buf, 1);
 
         papplLogJob(job, PAPPL_LOGLEVEL_DEBUG,
