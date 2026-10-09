@@ -306,12 +306,33 @@ AS_IF([test "x$enable_pappl_backends_for_legacy_printer_app" != "xno"], [
     AC_DEFINE(ENABLE_PAPPL_BACKENDS, 1, [Build legacy-printer-app with PAPPL backend support])
 ])
 
+# ============================================
+# Build Samba Printer Application?
+# ============================================
+AC_ARG_WITH([samba-printer-app],
+	[AS_HELP_STRING([--with-samba-printer-app], [Build samba-printer-app for CUPS 3.x SMB/CIFS printing with Kerberos support.])],
+	[with_samba_printer_app="$withval"],
+	[with_samba_printer_app=yes]
+)
+AM_CONDITIONAL([WITH_SAMBA_PRINTER_APP], test x$with_samba_printer_app != xno)
+
+# =====================================================
+# Run samba-printer-app permanently as daemon?
+# =====================================================
+AC_ARG_ENABLE([samba-printer-app-as-daemon],
+	[AS_HELP_STRING([--enable-samba-printer-app-as-daemon], [Run samba-printer-app permanently as daemon (systemd service for CUPS 3.x SMB printing).])],
+	[enable_samba_printer_app_as_daemon="$enableval"],
+	[enable_samba_printer_app_as_daemon=yes]
+)
+AM_CONDITIONAL([SAMBA_PRINTER_APP_AS_DAEMON], test x$enable_samba_printer_app_as_daemon != xno)
+
 # =====================
 # Prepare all .in files
 # =====================
 AC_CONFIG_FILES([
 	libpappl-retrofit.pc
 	Makefile
+	samba/Makefile
 ])
 AC_OUTPUT
 
@@ -328,6 +349,8 @@ Build configuration:
 	cups-config:     ${with_cups_config}
 	legacy-printer-app as daemon: ${enable_legacy_printer_app_as_daemon}
 	legacy-printer-app w/ PAPPL backends: ${enable_pappl_backends_for_legacy_printer_app}
+	samba-printer-app: ${with_samba_printer_app}
+	samba-printer-app as daemon: ${enable_samba_printer_app_as_daemon}
 	systemd unitdir: ${SYSTEMD_UNITDIR}
 ==============================================================================
 ])

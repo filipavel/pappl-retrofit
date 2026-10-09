@@ -251,7 +251,12 @@ endif
 
 uninstall-hook:
 
-SUBDIRS =
+# =========================
+# Samba Printer Application
+# =========================
+if WITH_SAMBA_PRINTER_APP
+SUBDIRS = samba
+endif
 
 # ============================================================
 # Staged-install downstream autopkgtests (DESTDIR staging)
